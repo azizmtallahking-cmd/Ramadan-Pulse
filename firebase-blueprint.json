@@ -1,0 +1,228 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user information, points, and level.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID" },
+        "email": { "type": "string", "format": "email", "description": "User's email" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "photoURL": { "type": "string", "format": "uri", "description": "User's photo URL" },
+        "points": { "type": "integer", "description": "Total points earned" },
+        "level": { "type": "integer", "description": "Current user level" },
+        "lastActive": { "type": "string", "format": "date-time", "description": "Last activity timestamp" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
+      },
+      "required": ["uid", "email", "displayName", "points", "level"]
+    },
+    "Synergy": {
+      "title": "Synergy",
+      "description": "Represents a strategic connection between two files.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fileAId": { "type": "string" },
+        "fileBId": { "type": "string" },
+        "reason": { "type": "string" },
+        "percentage": { "type": "number" },
+        "sharedGoals": { "type": "array", "items": { "type": "string" } },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fileAId", "fileBId", "reason", "percentage", "sharedGoals"]
+    },
+    "File": {
+      "title": "File",
+      "description": "A high-level 'File' (ملف) containing projects and goals.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string", "description": "تعريف بالملف" },
+        "importance": { "type": "string", "description": "أهمية الملف" },
+        "role": { "type": "string", "description": "دور الملف" },
+        "generalGoals": { "type": "array", "items": { "type": "string" }, "description": "الأهداف العامة" },
+        "stars": { "type": "integer", "description": "نجوم الملف (نجمة لكل 200 نقطة)" },
+        "pulse": { "type": "integer", "description": "حالة النبض (0-100)" },
+        "points": { "type": "integer", "description": "نقاط الملف التراكمية" },
+        "status": { "type": "string", "enum": ["active", "completed", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "title", "pulse", "points", "status"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A project under a specific file.",
+      "type": "object",
+      "properties": {
+        "fileId": { "type": "string" },
+        "uid": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string", "description": "مضمون المشروع" },
+        "fruits": { "type": "string", "description": "ثمرات المشروع" },
+        "duration": { "type": "string", "description": "طول المشروع (مقدر أو ممتد)" },
+        "type": { "type": "string", "enum": ["daily", "weekly", "monthly", "flexible"] },
+        "trackingType": { "type": "string", "enum": ["percentage", "points"] },
+        "progress": { "type": "integer" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["active", "completed"] }
+      },
+      "required": ["fileId", "uid", "title", "progress", "status"]
+    },
+    "VaultItem": {
+      "title": "Vault Item",
+      "description": "An item in the file's vault (PDF, Image, Table, Text, Report).",
+      "type": "object",
+      "properties": {
+        "fileId": { "type": "string" },
+        "uid": { "type": "string" },
+        "type": { "type": "string", "enum": ["pdf", "image", "table", "text", "report"] },
+        "title": { "type": "string" },
+        "content": { "type": "string", "description": "Content or URL" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fileId", "uid", "type", "title", "content"]
+    },
+    "Thought": {
+      "title": "Thought",
+      "description": "Thoughts on the way (خواطر في الطريق).",
+      "type": "object",
+      "properties": {
+        "fileId": { "type": "string" },
+        "uid": { "type": "string" },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fileId", "uid", "content", "timestamp"]
+    },
+    "ArchivedDay": {
+      "title": "Archived Day",
+      "description": "A missed day archived as a corrupted file.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["corrupted", "repaired"] },
+        "repairAction": { "type": "string", "description": "Action taken to repair (e.g., Istighfar)" }
+      },
+      "required": ["uid", "date", "status"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "A standalone goal (daily, weekly, or general).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "text": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "type": { "type": "string", "enum": ["daily", "weekly", "general"] },
+        "targetDate": { "type": "string", "format": "date" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "points": { "type": "integer" }
+      },
+      "required": ["uid", "text", "status", "type"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A message in the chat history with Ramadan Man.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "role": { "type": "string", "enum": ["user", "model"], "description": "Message sender role" },
+        "content": { "type": "string", "description": "Message content" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Message timestamp" }
+      },
+      "required": ["uid", "role", "content", "timestamp"]
+    },
+    "ArchiveEntry": {
+      "title": "Archive Entry",
+      "description": "A record of a specific period (Day, Week, Month, Year).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "type": { "type": "string", "enum": ["day", "week", "month", "year"] },
+        "goals": { "type": "array", "items": { "type": "object" } },
+        "files": { "type": "array", "items": { "type": "object" } },
+        "achievements": { "type": "array", "items": { "type": "object" } },
+        "thoughts": { "type": "array", "items": { "type": "string" } },
+        "aiSummary": { "type": "string" },
+        "points": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "type", "timestamp"]
+    },
+    "FloatingInsight": {
+      "title": "Floating Insight",
+      "description": "A short, smart message from Ramadan Man.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["success", "warning", "info"] },
+        "location": { "type": "string", "enum": ["home", "files", "goals", "archive", "chat", "all"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["uid", "content", "type", "location", "timestamp", "isRead"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile data"
+    },
+    "/files/{fileId}": {
+      "schema": "File",
+      "description": "User files containing projects"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Projects belonging to files"
+    },
+    "/vault/{itemId}": {
+      "schema": "VaultItem",
+      "description": "Vault items for files"
+    },
+    "/thoughts/{thoughtId}": {
+      "schema": "Thought",
+      "description": "Thoughts on the way"
+    },
+    "/archived_days/{dayId}": {
+      "schema": "ArchivedDay",
+      "description": "Corrupted/Archived days"
+    },
+    "/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Standalone goals"
+    },
+    "/synergies/{synergyId}": {
+      "schema": "Synergy",
+      "description": "Strategic intersections between two files"
+    },
+    "/chats/{userId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Chat history for each user"
+    },
+    "/archives/{userId}/years/{year}": {
+      "schema": "ArchiveEntry",
+      "description": "Yearly archive"
+    },
+    "/archives/{userId}/years/{year}/months/{month}": {
+      "schema": "ArchiveEntry",
+      "description": "Monthly archive"
+    },
+    "/archives/{userId}/years/{year}/months/{month}/weeks/{week}": {
+      "schema": "ArchiveEntry",
+      "description": "Weekly archive"
+    },
+    "/archives/{userId}/years/{year}/months/{month}/weeks/{week}/days/{day}": {
+      "schema": "ArchiveEntry",
+      "description": "Daily archive"
+    },
+    "/insights/{insightId}": {
+      "schema": "FloatingInsight",
+      "description": "Floating insights for users"
+    }
+  }
+}
