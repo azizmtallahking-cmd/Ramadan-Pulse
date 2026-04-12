@@ -13,7 +13,6 @@ import {
   File as FileIcon, Table as TableIcon, ClipboardList, Star, Activity, 
   Heart, Zap, Info, Shield, Flag, Box
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 import FloatingInsights from '../components/FloatingInsights';
 
 interface FilesProps {
