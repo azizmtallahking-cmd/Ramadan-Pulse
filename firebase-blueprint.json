@@ -6,15 +6,22 @@
       "type": "object",
       "properties": {
         "uid": { "type": "string", "description": "Unique user ID" },
-        "email": { "type": "string", "format": "email", "description": "User's email" },
+        "phoneNumber": { "type": "string", "description": "User's phone number" },
         "displayName": { "type": "string", "description": "User's display name" },
         "photoURL": { "type": "string", "format": "uri", "description": "User's photo URL" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "age": { "type": "integer" },
+        "appBenefit": { "type": "string" },
+        "visitReason": { "type": "string" },
+        "country": { "type": "string" },
+        "onboardingCompleted": { "type": "boolean" },
         "points": { "type": "integer", "description": "Total points earned" },
         "level": { "type": "integer", "description": "Current user level" },
         "lastActive": { "type": "string", "format": "date-time", "description": "Last activity timestamp" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
       },
-      "required": ["uid", "email", "displayName", "points", "level"]
+      "required": ["uid", "phoneNumber", "displayName", "points", "level"]
     },
     "Synergy": {
       "title": "Synergy",

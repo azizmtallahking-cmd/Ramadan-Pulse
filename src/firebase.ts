@@ -1,28 +1,47 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, getDocFromServer } from 'firebase/firestore';
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  onAuthStateChanged, 
+  User 
+} from 'firebase/auth';
+import { 
+  getFirestore, doc, getDoc, setDoc, collection, query, where, 
+  onSnapshot, addDoc, serverTimestamp, orderBy, limit, getDocFromServer 
+} from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 /**
  * IMPORTANT FOR VERCEL DEPLOYMENT:
- * You must add 'ramadan-pulse.vercel.app' to the "Authorized domains" 
- * in your Firebase Console under Authentication > Settings > Authorized domains.
+ * You must enable "Email/Password" in your Firebase Console under Authentication > Sign-in method.
  */
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
 
-export const signInWithGoogle = async () => {
+// Helper to transform phone to internal email format
+const phoneToEmail = (phone: string) => `${phone.replace(/\s+/g, '')}@pulse.local`;
+
+export const signUpWithPhone = async (phone: string, password: string) => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const email = phoneToEmail(phone);
+    const result = await createUserWithEmailAndPassword(auth, email, password);
     return result.user;
   } catch (error) {
-    console.error("Error signing in with Google", error);
+    console.error("Error signing up with phone", error);
+    throw error;
+  }
+};
+
+export const signInWithPhone = async (phone: string, password: string) => {
+  try {
+    const email = phoneToEmail(phone);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with phone", error);
     throw error;
   }
 };

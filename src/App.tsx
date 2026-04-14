@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db, signInWithGoogle, handleFirestoreError, OperationType } from './firebase';
+import { auth, db, signInWithPhone, signUpWithPhone, handleFirestoreError, OperationType } from './firebase';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, onSnapshot, updateDoc } from 'firebase/firestore';
 import { UserProfile } from './types';
@@ -13,20 +13,41 @@ import PulseCorner from './pages/PulseCorner';
 import Onboarding from './pages/Onboarding';
 import ErrorBoundary from './components/ErrorBoundary';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogIn, Moon, Loader2 } from 'lucide-react';
+import { LogIn, Moon, Loader2, Phone, Lock, UserPlus, AlertCircle } from 'lucide-react';
 import { seedUserRoutine } from './services/seedService';
 import { checkAndTriggerSeasonalReview } from './services/adminService';
 
-// Memoized Login View to prevent App re-renders from blocking the button interaction
-const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => {
+// Memoized Login View to handle Phone + Password
+const LoginView = React.memo(() => {
   const [isPending, setIsPending] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleLogin = async () => {
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phone || !password) {
+      setError('يرجى إدخال رقم الهاتف وكلمة المرور');
+      return;
+    }
+    
     setIsPending(true);
+    setError('');
+    
     try {
-      await onLogin();
-    } catch (error) {
+      if (mode === 'signup') {
+        await signUpWithPhone(phone, password);
+      } else {
+        await signInWithPhone(phone, password);
+      }
+    } catch (err: any) {
+      console.error("Auth Error:", err);
+      if (err.code === 'auth/user-not-found') setError('رقم الهاتف غير مسجل');
+      else if (err.code === 'auth/wrong-password') setError('كلمة المرور غير صحيحة');
+      else if (err.code === 'auth/email-already-in-use') setError('رقم الهاتف مسجل مسبقاً');
+      else if (err.code === 'auth/operation-not-allowed') setError('يجب تفعيل خاصية (Email/Password) في إعدادات Firebase أولاً');
+      else setError('حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة لاحقاً');
       setIsPending(false);
     }
   };
@@ -41,47 +62,83 @@ const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => 
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="max-w-md w-full bg-white/80 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-white relative z-10"
+        className="max-w-md w-full bg-white/80 backdrop-blur-xl p-8 md:p-10 rounded-[3rem] shadow-2xl border border-white relative z-10"
       >
-        <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-200 rotate-3 hover:rotate-0 transition-transform duration-500">
-          <Moon className="w-12 h-12 text-white" />
+        <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200 rotate-3 hover:rotate-0 transition-transform duration-500">
+          <Moon className="w-10 h-10 text-white" />
         </div>
 
-        <div className="space-y-2 mb-10">
-          <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">نبض رمضان</h1>
-          <p className="text-stone-500 text-lg">بوابتك الرقمية للارتقاء الوجودي</p>
+        <div className="space-y-2 mb-8">
+          <h1 className="text-3xl font-bold text-stone-900 font-serif tracking-tight">نبض رمضان</h1>
+          <p className="text-stone-500">بوابتك الرقمية للارتقاء الوجودي</p>
         </div>
 
         {/* Tabs */}
         <div className="flex p-1.5 bg-stone-100 rounded-2xl mb-8">
           <button 
-            onClick={() => setMode('signin')}
+            onClick={() => { setMode('signin'); setError(''); }}
             className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'signin' ? 'bg-white text-emerald-600 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             تسجيل الدخول
           </button>
           <button 
-            onClick={() => setMode('signup')}
+            onClick={() => { setMode('signup'); setError(''); }}
             className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'signup' ? 'bg-white text-emerald-600 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             إنشاء حساب
           </button>
         </div>
 
-        <div className="space-y-6">
-          <div className="text-right px-2">
+        <form onSubmit={handleAuth} className="space-y-5">
+          <div className="text-right px-2 mb-4">
             <h3 className="font-bold text-stone-800 text-lg mb-1">
               {mode === 'signin' ? 'مرحباً بعودتك' : 'ابدأ رحلة البناء'}
             </h3>
             <p className="text-stone-500 text-sm">
               {mode === 'signin' 
-                ? 'سجل دخولك لاستكمال مسار نبضك الوجودي' 
-                : 'انضم لأهل الديار وصمم نظامك الرمضاني الخاص'}
+                ? 'أدخل رقم هاتفك وكلمة المرور للمتابعة' 
+                : 'أنشئ حساباً جديداً برقم هاتفك لتصميم نظامك'}
             </p>
           </div>
 
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="bg-red-50 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2 text-right"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </motion.div>
+          )}
+
+          <div className="space-y-4">
+            <div className="relative">
+              <Phone className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="رقم الهاتف"
+                dir="rtl"
+                className="w-full pr-12 pl-4 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-stone-900"
+              />
+            </div>
+            <div className="relative">
+              <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="كلمة المرور"
+                dir="rtl"
+                className="w-full pr-12 pl-4 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-stone-900"
+              />
+            </div>
+          </div>
+
           <button
-            onClick={handleLogin}
+            type="submit"
             disabled={isPending}
             className="w-full group relative flex items-center justify-center gap-4 bg-stone-900 text-white px-6 py-5 rounded-[1.5rem] font-bold hover:bg-stone-800 transition-all active:scale-[0.98] disabled:opacity-70 overflow-hidden"
           >
@@ -91,12 +148,12 @@ const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => 
               <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
             ) : (
               <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                <LogIn className="w-5 h-5" />
+                {mode === 'signin' ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
               </div>
             )}
             
             <span className="text-lg">
-              {isPending ? 'جاري التحقق...' : 'المتابعة باستخدام جوجل'}
+              {isPending ? 'جاري التحقق...' : (mode === 'signin' ? 'دخول' : 'إنشاء الحساب')}
             </span>
           </button>
 
@@ -105,7 +162,7 @@ const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => 
               بالاستمرار، أنت توافق على ميثاق البناء وشروط الاستخدام الخاصة بنبض رمضان.
             </p>
           </div>
-        </div>
+        </form>
       </motion.div>
 
       {/* Footer Branding */}
@@ -174,9 +231,9 @@ export default function App() {
             // Initialize new profile
             const newProfile: UserProfile = {
               uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName || 'مستخدم جديد',
-              photoURL: user.photoURL || '',
+              phoneNumber: user.email?.split('@')[0] || '', // Extract phone from internal email
+              displayName: 'مستخدم جديد',
+              photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
               onboardingCompleted: false,
               points: 0,
               level: 1,
@@ -225,7 +282,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginView onLogin={signInWithGoogle} />;
+    return <LoginView />;
   }
 
   // Onboarding Flow for new users

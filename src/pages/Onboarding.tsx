@@ -152,11 +152,11 @@ export default function Onboarding({ profile }: OnboardingProps) {
                       className={`p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ${formData.useGooglePhoto ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 hover:border-emerald-200'}`}
                     >
                       <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
-                        <img src={profile.photoURL} className="w-8 h-8 rounded-full" alt="Google" />
+                        <img src={profile.photoURL} className="w-8 h-8 rounded-full" alt="Default" />
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-stone-900">البقاء على صورة الحساب</p>
-                        <p className="text-xs text-stone-500">استخدام صورتك من جوجل</p>
+                        <p className="font-bold text-stone-900">البقاء على الصورة الافتراضية</p>
+                        <p className="text-xs text-stone-500">استخدام الصورة الحالية</p>
                       </div>
                     </button>
 

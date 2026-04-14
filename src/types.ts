@@ -25,7 +25,7 @@ export type VaultItemType = 'pdf' | 'image' | 'table' | 'text' | 'report';
 
 export interface UserProfile {
   uid: string;
-  email: string;
+  phoneNumber: string;
   displayName: string;
   photoURL: string;
   firstName?: string;
