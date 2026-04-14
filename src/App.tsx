@@ -20,6 +20,7 @@ import { checkAndTriggerSeasonalReview } from './services/adminService';
 // Memoized Login View to prevent App re-renders from blocking the button interaction
 const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => {
   const [isPending, setIsPending] = useState(false);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
   const handleLogin = async () => {
     setIsPending(true);
@@ -31,29 +32,91 @@ const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#faf9f6] p-6 text-center relative overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-50 rounded-full blur-3xl opacity-50" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-stone-100 rounded-full blur-3xl opacity-50" />
+      
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-stone-100"
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="max-w-md w-full bg-white/80 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-white relative z-10"
       >
-        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Moon className="w-10 h-10 text-emerald-600" />
+        <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-200 rotate-3 hover:rotate-0 transition-transform duration-500">
+          <Moon className="w-12 h-12 text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-stone-900 mb-2 font-serif">نبض رمضان</h1>
-        <p className="text-stone-600 mb-8">استعد لرمضان وحافظ على أهدافك الإيمانية مع المرشد الذكي Ramadan Man.</p>
-        <button
-          onClick={handleLogin}
-          disabled={isPending}
-          className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white px-6 py-4 rounded-2xl font-semibold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isPending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <LogIn className="w-5 h-5" />
-          )}
-          {isPending ? 'جاري التحميل...' : 'تسجيل الدخول باستخدام جوجل'}
-        </button>
+
+        <div className="space-y-2 mb-10">
+          <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">نبض رمضان</h1>
+          <p className="text-stone-500 text-lg">بوابتك الرقمية للارتقاء الوجودي</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex p-1.5 bg-stone-100 rounded-2xl mb-8">
+          <button 
+            onClick={() => setMode('signin')}
+            className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'signin' ? 'bg-white text-emerald-600 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+          >
+            تسجيل الدخول
+          </button>
+          <button 
+            onClick={() => setMode('signup')}
+            className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'signup' ? 'bg-white text-emerald-600 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+          >
+            إنشاء حساب
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <div className="text-right px-2">
+            <h3 className="font-bold text-stone-800 text-lg mb-1">
+              {mode === 'signin' ? 'مرحباً بعودتك' : 'ابدأ رحلة البناء'}
+            </h3>
+            <p className="text-stone-500 text-sm">
+              {mode === 'signin' 
+                ? 'سجل دخولك لاستكمال مسار نبضك الوجودي' 
+                : 'انضم لأهل الديار وصمم نظامك الرمضاني الخاص'}
+            </p>
+          </div>
+
+          <button
+            onClick={handleLogin}
+            disabled={isPending}
+            className="w-full group relative flex items-center justify-center gap-4 bg-stone-900 text-white px-6 py-5 rounded-[1.5rem] font-bold hover:bg-stone-800 transition-all active:scale-[0.98] disabled:opacity-70 overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            {isPending ? (
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+            ) : (
+              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <LogIn className="w-5 h-5" />
+              </div>
+            )}
+            
+            <span className="text-lg">
+              {isPending ? 'جاري التحقق...' : 'المتابعة باستخدام جوجل'}
+            </span>
+          </button>
+
+          <div className="pt-4">
+            <p className="text-xs text-stone-400 leading-relaxed">
+              بالاستمرار، أنت توافق على ميثاق البناء وشروط الاستخدام الخاصة بنبض رمضان.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Footer Branding */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="mt-12 text-stone-400 font-medium flex items-center gap-2"
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        نظام سيادي مدعوم بالذكاء الاصطناعي
       </motion.div>
     </div>
   );
