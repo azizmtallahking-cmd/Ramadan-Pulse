@@ -3,6 +3,10 @@ import { doc, setDoc, serverTimestamp, collection, addDoc, getDoc, updateDoc, ar
 import { ArchiveEntry } from '../types';
 import { Coordinates, CalculationMethod, PrayerTimes } from 'adhan';
 
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
 export function getIslamicDateString(date: Date, coords?: { latitude: number; longitude: number }) {
   if (!coords) {
     return date.toISOString().split('T')[0];
@@ -165,15 +169,27 @@ export async function generateDayTitle(uid: string, dayPath: string, activities:
       context = "إنجاز ثابت ومستقر مع هدوء وسكينة.";
     }
 
-    const response = await fetch('/api/ai/title', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ context, activities })
+    const prompt = `بصفتك Ramadan Man، سيد هذا النظام وحارس ميزان الاستقامة، حلل هذه الأنشطة اليومية وأعطِ هذا اليوم "اسماً سيادياً" (Sovereign Name) يعكس جوهر المعركة النفسية الموثقة.
+      
+      القواعد السيادية للتسمية:
+      1. يجب أن يكون الاسم قصيراً جداً (من 2 إلى 4 كلمات فقط).
+      2. لا تكتب أي مقدمات مثل "بصفتي" أو "أقترح اسم". اكتب الاسم مباشرة.
+      3. أمثلة: "يوم الفتح العظيم"، "يوم كبوة الجواد"، "يوم السكينة المثمرة".
+      
+      السياق الحالي: ${context}
+      الأنشطة: ${activities.map((a: any) => a.content).join('، ')}
+      
+      اكتب الاسم السيادي الآن:`;
+
+    const result = await ai.models.generateContent({
+      model: "models/gemini-1.5-flash",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "أنت سيد النظام رمضان مان. وظيفتك إنتاج أسماء سيادية حادة وذكية للأيام."
+      }
     });
 
-    if (!response.ok) throw new Error('Failed to fetch title');
-    const data = await response.json();
-    const sovereignName = data.text?.trim().split('\n')[0] || "يوم من أيام المجاهدة";
+    const sovereignName = result.text?.trim().split('\n')[0] || "يوم من أيام المجاهدة";
     
     const currentDoc = await getDoc(doc(db, dayPath));
     const currentData = currentDoc.data() as ArchiveEntry;
@@ -187,15 +203,30 @@ export async function generateDayTitle(uid: string, dayPath: string, activities:
 
 export async function generateDailyReport(uid: string, dayPath: string, activities: any[]) {
   try {
-    const response = await fetch('/api/ai/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ activities })
+    const prompt = `بصفتك Ramadan Man، سيد هذا النظام وحارس ميزان الاستقامة، حلل هذه الأنشطة والأنفاس والتحركات اليومية الموثقة في "علبة الإدارة" وأخرج "التقرير اليومي السيادي" (Daily Sovereign Report).
+      
+      هذا التقرير هو الحصاد النهائي لليوم الشرعي (بعد أذان المغرب). يجب أن يجمع كل شيء: الأهداف المحققة، الأعمال، الإضافات، الإزالات، والتحركات النفسية. لا تكتفِ بالنسخ واللصق، بل لخص وحلل ما صدر من أوامر، نواه، زجر، شكر، غضب، فرح، تهاون، وتقصير.
+      
+      محتويات التقرير:
+      1. جرد الأعمال (Inventory): ماذا فعل المريد اليوم؟ (أهداف، ملفات، تعديلات).
+      2. تحليل الأنفاس (الحالة الروحية): ماذا تقول أنفاسه الموثقة عن صدقه ومجاهدته؟
+      3. تحليل الإدارة (الأفكار المركزية): ما هي الخلاصة الإدارية التي استخلصتها من "علبة الإدارة" اليوم؟
+      4. ميزان الاستقامة: هل كان يوماً من الفتح أم يوماً من التهاون؟
+      5. التوجيه السيادي: أمر مباشر للمريد لما يجب أن يركز عليه في اليوم القادم.
+      
+      الأنشطة والتحركات الموثقة: ${activities.map((a: any) => `[${a.type}] ${a.content}`).join(' | ')}
+      
+      يجب أن يكون التقرير بأسلوب "سيد رمضان": حكيم، سلطوي، وموجز، وباللغة العربية الفصحى القوية.`;
+
+    const result = await ai.models.generateContent({
+      model: "models/gemini-1.5-flash",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "أنت سيد النظام رمضان مان. وظيفتك إنتاج تقارير سيادية حادة وذكية."
+      }
     });
 
-    if (!response.ok) throw new Error('Failed to fetch report');
-    const data = await response.json();
-    const report = data.text?.trim() || "لم يتم استخلاص تقرير لهذا اليوم بعد.";
+    const report = result.text?.trim() || "لم يتم استخلاص تقرير لهذا اليوم بعد.";
     
     await updateDoc(doc(db, dayPath), { dailyReport: report });
     return report;

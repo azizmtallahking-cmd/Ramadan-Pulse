@@ -3,7 +3,7 @@ import { UserProfile, Goal, Synergy } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp, updateDoc, doc, deleteDoc, orderBy, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, CheckCircle2, Circle, Trash2, Calendar, Target, ListChecks, Sparkles, X, Clock, ChevronDown, ChevronRight, Layers, Zap } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, Calendar, Target, ListChecks, Sparkles, X, Clock, ChevronDown, ChevronRight, Layers, Zap, Flag } from 'lucide-react';
 import { triggerAdministrativeReview } from '../services/adminService';
 import FloatingInsights from '../components/FloatingInsights';
 
@@ -20,8 +20,10 @@ export default function Goals({ profile }: GoalsProps) {
   const [newGoalText, setNewGoalText] = useState('');
   const [newGoalDescription, setNewGoalDescription] = useState('');
   const [newGoalTime, setNewGoalTime] = useState('');
-  const [newGoalType, setNewGoalType] = useState<'daily' | 'weekly' | 'general'>('daily');
+  const [newGoalType, setNewGoalType] = useState<'daily' | 'weekly' | 'monthly' | 'general'>('daily');
   const [newGoalParentId, setNewGoalParentId] = useState<string>('');
+  const [newGoalProjectId, setNewGoalProjectId] = useState<string>('');
+  const [projects, setProjects] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
   const [temporalWarning, setTemporalWarning] = useState<string | null>(null);
@@ -76,9 +78,18 @@ export default function Goals({ profile }: GoalsProps) {
         handleFirestoreError(err, OperationType.LIST, 'synergies');
       });
 
+      // Fetch projects
+      const pq = query(collection(db, 'projects'), where('uid', '==', profile.uid));
+      const unsubscribeProjects = onSnapshot(pq, (snapshot) => {
+        setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }, (err) => {
+        handleFirestoreError(err, OperationType.LIST, 'projects');
+      });
+
       return () => {
         unsubscribe();
         unsubscribeSynergies();
+        unsubscribeProjects();
       };
     }
   }, [profile]);
@@ -94,15 +105,17 @@ export default function Goals({ profile }: GoalsProps) {
         description: newGoalDescription.trim(),
         time: newGoalTime || null,
         parentId: newGoalParentId || null,
+        projectId: newGoalProjectId || null,
         status: 'pending',
         type: newGoalType,
         createdAt: serverTimestamp(),
-        points: newGoalType === 'daily' ? 10 : newGoalType === 'weekly' ? 50 : 100
+        points: newGoalType === 'daily' ? 10 : newGoalType === 'weekly' ? 50 : newGoalType === 'monthly' ? 100 : 150
       });
       setNewGoalText('');
       setNewGoalDescription('');
       setNewGoalTime('');
       setNewGoalParentId('');
+      setNewGoalProjectId('');
       setIsAdding(false);
 
       // Log activity
@@ -212,8 +225,8 @@ export default function Goals({ profile }: GoalsProps) {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-stone-900 font-serif">غرفة الأهداف</h1>
-          <p className="text-stone-500 mt-1">هنا تزرع عاداتك اليومية وتراقب نمو همتك.</p>
+          <h1 className="text-3xl font-black text-stone-900 font-serif">هندسة الأهداف</h1>
+          <p className="text-stone-500 mt-1">هنا تصمم المخطط الزمني وتوزع نقاط الارتقاء في الكواليس.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-2xl text-xs font-bold">
@@ -277,7 +290,19 @@ export default function Goals({ profile }: GoalsProps) {
                 >
                   <option value="daily">يومي</option>
                   <option value="weekly">أسبوعي</option>
+                  <option value="monthly">شهري</option>
                   <option value="general">عام</option>
+                </select>
+
+                <select 
+                  value={newGoalProjectId}
+                  onChange={(e) => setNewGoalProjectId(e.target.value)}
+                  className="w-full bg-white border border-stone-200 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none"
+                >
+                  <option value="">لا يوجد مشروع أب</option>
+                  {projects.map(p => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
                 </select>
 
                 <select 
@@ -444,10 +469,17 @@ const GoalItem = ({ goal, isSubGoal = false, onToggle, onDelete, onExpand, expan
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
               goal.type === 'daily' ? 'bg-blue-50 text-blue-600' : 
               goal.type === 'weekly' ? 'bg-purple-50 text-purple-600' : 
+              goal.type === 'monthly' ? 'bg-emerald-50 text-emerald-600' :
               'bg-amber-50 text-amber-600'
             }`}>
-              {goal.type === 'daily' ? 'يومي' : goal.type === 'weekly' ? 'أسبوعي' : 'عام'}
+              {goal.type === 'daily' ? 'يومي' : goal.type === 'weekly' ? 'أسبوعي' : goal.type === 'monthly' ? 'شهري' : 'عام'}
             </span>
+            {goal.projectId && (
+              <span className="flex items-center gap-1 text-[10px] font-bold text-stone-600 bg-stone-100 px-2 py-0.5 rounded-full">
+                <Flag className="w-3 h-3" />
+                مشروع
+              </span>
+            )}
             {hasSynergy && (
               <span className="flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
                 <Zap className="w-3 h-3" />

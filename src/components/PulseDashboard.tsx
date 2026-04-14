@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Star, Activity, User, AlertCircle, RefreshCw, MessageCircle, Send, Plus, ChevronRight } from 'lucide-react';
 import { AppState, FileObject, ArchivedDay } from '../types';
-import { FileCard } from './FileCard';
+import FileCard from './FileCard';
 import { PulseCircle } from './PulseCircle';
 
 interface PulseDashboardProps {

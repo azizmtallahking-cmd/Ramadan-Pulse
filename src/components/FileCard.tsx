@@ -1,59 +1,63 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Star, FileText, Activity, User } from 'lucide-react';
-import { FileObject } from '../types';
-import { PulseCircle } from './PulseCircle';
+import { Folder, Sparkles, Star, Box, Activity, ChevronLeft, Zap } from 'lucide-react';
+import { File, QuasiFile } from '../types';
 
 interface FileCardProps {
-  file: FileObject;
+  file: File | QuasiFile;
   onClick: () => void;
 }
 
-export const FileCard: React.FC<FileCardProps> = ({ file, onClick }) => {
+const FileCard: React.FC<FileCardProps> = ({ file, onClick }) => {
+  const isQuasi = (file as QuasiFile).isQuasi;
+
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -5 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -5 }}
       onClick={onClick}
-      className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 cursor-pointer flex flex-col gap-4 relative overflow-hidden group"
+      className={`bg-white p-6 rounded-[2.5rem] shadow-sm border border-stone-100 cursor-pointer group hover:shadow-xl hover:shadow-stone-200/50 transition-all relative overflow-hidden ${isQuasi ? 'border-dashed border-emerald-400 bg-emerald-50/20 shadow-lg shadow-emerald-100/50' : ''}`}
     >
-      {/* Background Accent */}
-      <div 
-        className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-5 transition-transform group-hover:scale-150"
-        style={{ backgroundColor: file.color }}
-      />
-
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <FileText size={18} style={{ color: file.color }} />
-            <h3 className="text-xl font-bold text-gray-900">{file.name}</h3>
-          </div>
-          <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{file.description}</p>
+      <div className={`absolute top-0 right-0 w-2 h-full ${isQuasi ? 'bg-emerald-500/40' : 'bg-emerald-600/10 group-hover:bg-emerald-600/20'} transition-colors`} />
+      
+      <div className="flex items-start justify-between mb-6">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-50 transition-colors shadow-inner ${isQuasi ? 'bg-emerald-200/50' : 'bg-stone-50'}`}>
+          {isQuasi ? <Sparkles className="w-8 h-8 animate-pulse" /> : <Folder className="w-8 h-8" />}
         </div>
-        <PulseCircle status={file.pulseStatus} size={60} color={file.color} label="النبض" />
-      </div>
-
-      <div className="flex items-center gap-4 mt-2">
-        <div className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-          <Star size={14} className="text-amber-500 fill-amber-500" />
-          <span className="text-sm font-bold text-amber-700">{file.stars} <span className="text-[10px] font-normal">نجوم</span></span>
-        </div>
-        <div className="flex items-center gap-1 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-          <Activity size={14} className="text-emerald-500" />
-          <span className="text-sm font-bold text-emerald-700">{file.points} <span className="text-[10px] font-normal">نقاط</span></span>
+        <div className="flex items-center gap-2">
+          {!isQuasi && (
+            <>
+              {(file.points || 0) >= 1000 && (
+                <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
+                  <Box className="w-3 h-3 text-amber-600" />
+                  <span className="text-[10px] font-black text-amber-700 uppercase">Dim {Math.floor((file.points || 0) / 1000)}</span>
+                </div>
+              )}
+              <div className="flex gap-0.5">
+                {[...Array(Math.floor(((file.points || 0) % 1000) / 200))].map((_, i) => (
+                  <Star key={i} className="w-3 h-3 text-amber-500 fill-amber-500" />
+                ))}
+              </div>
+            </>
+          )}
+          {isQuasi && <Zap className="w-4 h-4 text-emerald-500 animate-pulse" />}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-auto pt-4 border-t border-gray-50">
-        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-          <User size={16} />
+      <h3 className="text-xl font-bold text-stone-800 mb-2 truncate">{file.title}</h3>
+      <p className="text-sm text-stone-500 mb-6 line-clamp-2">{file.description}</p>
+
+      <div className="mt-auto pt-6 border-t border-stone-50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-emerald-500" />
+          <span className="text-xs font-bold text-stone-400">النبض: {file.pulse || 0}%</span>
         </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">العون المسؤول</span>
-          <span className="text-sm font-medium text-gray-700">{file.aideName}</span>
+        <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+          <span>{file.points || 0} نقطة</span>
+          <ChevronLeft className="w-4 h-4" />
         </div>
       </div>
     </motion.div>
   );
 };
+
+export default FileCard;

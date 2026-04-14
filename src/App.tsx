@@ -9,18 +9,60 @@ import Chat from './pages/Chat';
 import Files from './pages/Files';
 import Goals from './pages/Goals';
 import Archive from './pages/Archive';
+import PulseCorner from './pages/PulseCorner';
 import ErrorBoundary from './components/ErrorBoundary';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogIn, Moon } from 'lucide-react';
-
+import { LogIn, Moon, Loader2 } from 'lucide-react';
 import { seedUserRoutine } from './services/seedService';
 import { checkAndTriggerSeasonalReview } from './services/adminService';
+
+// Memoized Login View to prevent App re-renders from blocking the button interaction
+const LoginView = React.memo(({ onLogin }: { onLogin: () => Promise<void> }) => {
+  const [isPending, setIsPending] = useState(false);
+
+  const handleLogin = async () => {
+    setIsPending(true);
+    try {
+      await onLogin();
+    } catch (error) {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-6 text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-stone-100"
+      >
+        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Moon className="w-10 h-10 text-emerald-600" />
+        </div>
+        <h1 className="text-3xl font-bold text-stone-900 mb-2 font-serif">نبض رمضان</h1>
+        <p className="text-stone-600 mb-8">استعد لرمضان وحافظ على أهدافك الإيمانية مع المرشد الذكي Ramadan Man.</p>
+        <button
+          onClick={handleLogin}
+          disabled={isPending}
+          className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white px-6 py-4 rounded-2xl font-semibold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isPending ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <LogIn className="w-5 h-5" />
+          )}
+          {isPending ? 'جاري التحميل...' : 'تسجيل الدخول باستخدام جوجل'}
+        </button>
+      </motion.div>
+    </div>
+  );
+});
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'home' | 'chat' | 'files' | 'goals' | 'archive'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'chat' | 'files' | 'goals' | 'archive' | 'pulse'>('home');
 
   useEffect(() => {
     if (profile) {
@@ -111,28 +153,7 @@ export default function App() {
   }
 
   if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 p-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-stone-100"
-        >
-          <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Moon className="w-10 h-10 text-emerald-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-stone-900 mb-2 font-serif">نبض رمضان</h1>
-          <p className="text-stone-600 mb-8">استعد لرمضان وحافظ على أهدافك الإيمانية مع المرشد الذكي Ramadan Man.</p>
-          <button
-            onClick={signInWithGoogle}
-            className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white px-6 py-4 rounded-2xl font-semibold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95"
-          >
-            <LogIn className="w-5 h-5" />
-            تسجيل الدخول باستخدام جوجل
-          </button>
-        </motion.div>
-      </div>
-    );
+    return <LoginView onLogin={signInWithGoogle} />;
   }
 
   // Calculate Visual Restriction based on Pulse
@@ -147,40 +168,44 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <Layout 
-        profile={profile} 
-        onSignOut={() => signOut(auth)} 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPage}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            style={restrictionStyle}
-            className="h-full relative"
-          >
-            {/* Existential Vignette for low pulse */}
-            {pulse < 40 && (
-              <div 
-                className="fixed inset-0 pointer-events-none z-[60] transition-opacity duration-1000"
-                style={{ 
-                  background: `radial-gradient(circle, transparent 60%, rgba(0,0,0,${(40 - pulse) / 100}) 100%)`,
-                  opacity: (40 - pulse) / 40
-                }}
-              />
-            )}
-            {currentPage === 'home' && <Home profile={profile} onNavigate={setCurrentPage} />}
-            {currentPage === 'chat' && <Chat profile={profile} />}
-            {currentPage === 'files' && <Files profile={profile} />}
-            {currentPage === 'goals' && <Goals profile={profile} />}
-            {currentPage === 'archive' && <Archive profile={profile} />}
-          </motion.div>
-        </AnimatePresence>
-      </Layout>
+      {currentPage === 'pulse' ? (
+        <PulseCorner profile={profile} onNavigate={setCurrentPage} />
+      ) : (
+        <Layout 
+          profile={profile} 
+          onSignOut={() => signOut(auth)} 
+          currentPage={currentPage} 
+          setCurrentPage={setCurrentPage}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              style={restrictionStyle}
+              className="h-full relative"
+            >
+              {/* Existential Vignette for low pulse */}
+              {pulse < 40 && (
+                <div 
+                  className="fixed inset-0 pointer-events-none z-[60] transition-opacity duration-1000"
+                  style={{ 
+                    background: `radial-gradient(circle, transparent 60%, rgba(0,0,0,${(40 - pulse) / 100}) 100%)`,
+                    opacity: (40 - pulse) / 40
+                  }}
+                />
+              )}
+              {currentPage === 'home' && <Home profile={profile} onNavigate={setCurrentPage} />}
+              {currentPage === 'chat' && <Chat profile={profile} />}
+              {currentPage === 'files' && <Files profile={profile} />}
+              {currentPage === 'goals' && <Goals profile={profile} />}
+              {currentPage === 'archive' && <Archive profile={profile} />}
+            </motion.div>
+          </AnimatePresence>
+        </Layout>
+      )}
     </ErrorBoundary>
   );
 }

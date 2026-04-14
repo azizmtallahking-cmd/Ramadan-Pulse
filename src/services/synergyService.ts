@@ -3,6 +3,10 @@ import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimest
 import { File, Project, Synergy } from '../types';
 import { logActivity } from './archiveService';
 
+import { GoogleGenAI, Type } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
 async function isFileEmpty(uid: string, fileId: string): Promise<boolean> {
   const vaultSnap = await getDocs(query(collection(db, 'vault'), where('fileId', '==', fileId), limit(1)));
   const projectsSnap = await getDocs(query(collection(db, 'projects'), where('fileId', '==', fileId), limit(1)));
@@ -25,14 +29,53 @@ export async function scanForSynergy(uid: string, files: File[]) {
   if (eligibleFiles.length < 2) return;
   
   try {
-    const response = await fetch('/api/ai/synergy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eligibleFiles })
+    const prompt = `بصفتك Ramadan Man، سيد هذا النظام وحارس ميزان الاستقامة، اسمع وأطع لهذا الميثاق الصارم:
+      
+      "ميثاق الصرامة وقانون الخزائن الممتلئة":
+      1. إلغاء التشابك التلقائي المبني على العناوين: يُمنع منعاً باتاً إظهار أي تقارن بناءً على الكلمات المفتاحية فقط.
+      2. قانون الخزائن الممتلئة: لا يحق لك رصد احتمالية تقارن إذا كانت الملفات تفتقر للمادة الخام (معلومات، دروس، تلخيصات) أو مشاريع مفصلة.
+      3. كسر الأصنام المئوية: النسبة الحقيقية لملفات لا تستحق هي 0%. لا تعطي شعوراً زائفاً بالإنجاز.
+      4. شرط السبعة أيام: التقارن يتطلب 7 أيام من العمل الجاد المتبادل.
+      
+      حلل هذه الملفات المؤهلة (التي تجاوزت فحص الامتلاء):
+      ${JSON.stringify(eligibleFiles.map((f: any) => ({ id: f.id, title: f.title, description: f.description })))}
+      
+      ابحث عن ترابط (Synergy) حقيقي وعميق (نسبة > 85%). 
+      إذا لم تجد استحقاقاً جباراً، لا تقترح شيئاً.
+      
+      المطلوب:
+      1. تحديد الملفين المرشحين.
+      2. بناء "فلسفة التقارن" (توجيهات دقيقة للدمج).
+      3. تحديد أهداف مشتركة.`;
+
+    const result = await ai.models.generateContent({
+      model: "models/gemini-1.5-flash",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "أنت سيد النظام رمضان مان. وظيفتك رصد التقارن والتشابك الحقيقي بين الملفات.",
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              fileAId: { type: Type.STRING },
+              fileBId: { type: Type.STRING },
+              reason: { type: Type.STRING },
+              philosophy: { type: Type.STRING },
+              percentage: { type: Type.NUMBER },
+              sharedGoals: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              }
+            },
+            required: ['fileAId', 'fileBId', 'reason', 'philosophy', 'percentage', 'sharedGoals']
+          }
+        }
+      }
     });
 
-    if (!response.ok) throw new Error('Failed to fetch synergy');
-    const synergiesFound = await response.json();
+    const synergiesFound = JSON.parse(result.text || '[]');
     
     for (const syn of synergiesFound) {
       // Check if synergy already exists

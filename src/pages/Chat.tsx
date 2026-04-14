@@ -108,16 +108,16 @@ export default function Chat({ profile }: ChatProps) {
           </div>
           <div>
             <h3 className="font-bold text-stone-800 flex items-center gap-2">
-              المرشد Ramadan Man
+              عون البناء
               <Sparkles className="w-4 h-4 text-emerald-500" />
             </h3>
-            <p className="text-xs text-stone-400 font-medium">علبة الإدارة • المساءلة والارتقاء</p>
+            <p className="text-xs text-stone-400 font-medium">شريكك في هندسة النظام • الكواليس</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
+          <div className="flex items-center gap-2 px-4 py-2 bg-stone-800 text-white border border-stone-700 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
             <Crown className="w-3.5 h-3.5" />
-            عرش الإدارة مفعل
+            وضع الهندسة مفعل
           </div>
           <div className="flex items-center gap-2 px-4 py-1.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
             <Target className="w-3 h-3" />
@@ -133,22 +133,22 @@ export default function Chat({ profile }: ChatProps) {
       >
         {messages.length === 0 && !isTyping && (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-6 max-w-sm mx-auto">
-            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-emerald-600" />
+            <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center">
+              <Sparkles className="w-10 h-10 text-stone-600" />
             </div>
             <div className="space-y-2">
-              <h4 className="text-xl font-bold text-stone-800 font-serif">مرحباً بك في علبة الإدارة</h4>
+              <h4 className="text-xl font-bold text-stone-800 font-serif">مرحباً بك في غرفة الهندسة</h4>
               <p className="text-stone-500 text-sm leading-relaxed">
-                هذه هي علبة الإدارة، قناتك الإدارية مع Ramadan Man. 
-                هنا نؤكد الأنجازات، نؤرشف الأيام، ونحقق في الأهداف. 
-                كن مقتضباً، فالوقت من ذهب.
+                أنا عون البناء، شريكك في تصميم وتعديل هيكلك الوجودي. 
+                هنا نصنع النظام، نناقش المصلحة، ونبني المسارات. 
+                ناقشني في أي تعديل تراه مناسباً.
               </p>
             </div>
             <button 
-              onClick={() => setInput('أريد تأكيد إنجاز أهدافي اليومية وأرشفة هذا اليوم.')}
+              onClick={() => setInput('أريد مراجعة هيكلة أهدافي الحالية واقتراح تحسينات.')}
               className="px-6 py-3 bg-stone-800 text-white rounded-2xl text-xs font-bold hover:bg-stone-900 transition-all"
             >
-              بدء الجلسة الإدارية
+              بدء جلسة الهندسة
             </button>
           </div>
         )}
@@ -217,7 +217,7 @@ export default function Chat({ profile }: ChatProps) {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="اكتب رسالتك هنا..."
+            placeholder="ناقش العون في بناء النظام..."
             className="flex-1 bg-white border border-stone-200 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
           />
           <button

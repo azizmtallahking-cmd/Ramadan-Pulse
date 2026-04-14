@@ -31,6 +31,7 @@ export interface UserProfile {
   points: number;
   level: number;
   pulse: number; // النبض العام (0-100)
+  isResident?: boolean; // هل هو من أهل الديار أم زائر جديد
   lastActive: any;
   createdAt: any;
   lastSeasonalReviewAt?: any;
@@ -55,6 +56,8 @@ export interface File {
   uid: string;
   title: string;
   description?: string; // تعريف بالملف
+  content?: string; // محتوى الملف الوجودي
+  fruits?: string; // ثمرات الملف
   importance?: string; // أهمية الملف
   role?: string; // دور الملف
   generalGoals?: string[]; // الأهداف العامة
@@ -62,6 +65,8 @@ export interface File {
   pulse: number; // حالة النبض (0-100)
   points: number; // نقاط الملف التراكمية
   status: 'active' | 'completed' | 'archived';
+  startDate?: string;
+  endDate?: string;
   createdAt: any;
   assistantName?: string; // اسم عون السيد رمضان الموكل بالملف
   chatHistory?: ChatMessage[]; // History of chat with assistant
@@ -93,6 +98,7 @@ export interface VaultItem {
   type: 'pdf' | 'image' | 'table' | 'text' | 'report';
   title: string;
   content: string; // Content or URL
+  analysis?: string; // AI Analysis result
   createdAt: any;
 }
 
@@ -120,7 +126,8 @@ export interface Goal {
   text: string;
   description?: string; // Added for compatibility
   status: 'pending' | 'completed';
-  type: 'daily' | 'weekly' | 'general';
+  type: 'daily' | 'weekly' | 'monthly' | 'general';
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'general';
   targetDate?: string;
   time?: string; // Added for compatibility
   completedAt?: any;

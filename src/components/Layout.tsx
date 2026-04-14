@@ -26,31 +26,31 @@ export function Layout({ children, profile, onSignOut, currentPage, setCurrentPa
         <nav className="flex-1 p-4 space-y-2">
           <NavItem 
             icon={<Home className="w-5 h-5" />} 
-            label="الرئيسية" 
+            label="غرفة الهندسة" 
             active={currentPage === 'home'} 
             onClick={() => setCurrentPage('home')} 
           />
           <NavItem 
             icon={<MessageSquare className="w-5 h-5" />} 
-            label="الدردشة" 
+            label="عون البناء" 
             active={currentPage === 'chat'} 
             onClick={() => setCurrentPage('chat')} 
           />
           <NavItem 
             icon={<Archive className="w-5 h-5" />} 
-            label="الأرشيف Pro Max" 
+            label="سجل التعديلات" 
             active={currentPage === 'archive'} 
             onClick={() => setCurrentPage('archive')} 
           />
           <NavItem 
             icon={<Folder className="w-5 h-5" />} 
-            label="الملف" 
+            label="خزائن الهياكل" 
             active={currentPage === 'files'} 
             onClick={() => setCurrentPage('files')} 
           />
           <NavItem 
             icon={<Target className="w-5 h-5" />} 
-            label="غرفة الأهداف" 
+            label="هندسة الأهداف" 
             active={currentPage === 'goals'} 
             onClick={() => setCurrentPage('goals')} 
           />
@@ -84,11 +84,11 @@ export function Layout({ children, profile, onSignOut, currentPage, setCurrentPa
         {/* Header */}
         <header className="h-16 bg-white border-b border-stone-200 px-8 flex items-center justify-between z-10">
           <h2 className="text-lg font-semibold text-stone-700">
-            {currentPage === 'home' && 'لوحة التحكم'}
-            {currentPage === 'chat' && 'الدردشة'}
-            {currentPage === 'archive' && 'الأرشيف Pro Max'}
-            {currentPage === 'files' && 'الملف'}
-            {currentPage === 'goals' && 'غرفة الأهداف'}
+            {currentPage === 'home' && 'غرفة الهندسة'}
+            {currentPage === 'chat' && 'عون البناء'}
+            {currentPage === 'archive' && 'سجل التعديلات'}
+            {currentPage === 'files' && 'خزائن الهياكل'}
+            {currentPage === 'goals' && 'هندسة الأهداف'}
           </h2>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-bold border border-emerald-100">
