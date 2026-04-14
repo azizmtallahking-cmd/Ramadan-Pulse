@@ -1,4 +1,3 @@
-import { GoogleGenAI, Part } from "@google/genai";
 import { 
   SYSTEM_INSTRUCTION, 
   moveFileToGoalsTool, 
@@ -22,7 +21,18 @@ import {
   deleteGoalTool
 } from "./aiTools";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const callAIProxy = async (payload: any) => {
+  const response = await fetch('/api/ai/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || 'AI Proxy request failed');
+  }
+  return response.json();
+};
 
 export const generateRamadanManResponse = async (
   history: { role: 'user' | 'model', parts: any[] }[], 
@@ -35,8 +45,8 @@ export const generateRamadanManResponse = async (
 الأهداف: ${JSON.stringify(context.goals.map(g => ({ id: g.id, text: g.text, type: g.type })))}
 ` : '';
 
-  const response = await ai.models.generateContent({
-    model: "models/gemini-1.5-flash",
+  const payload = {
+    model: "gemini-1.5-flash",
     contents: [...history, { role: 'user', parts: [{ text: contextText + message }] }],
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
@@ -64,9 +74,9 @@ export const generateRamadanManResponse = async (
         ] 
       }]
     }
-  });
-  
-  return response;
+  };
+
+  return callAIProxy(payload);
 };
 
 export const generateCommandMessage = async (profile: any, goals: any[], files: any[]) => {
@@ -91,14 +101,15 @@ export const generateCommandMessage = async (profile: any, goals: any[], files: 
 `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "models/gemini-1.5-flash",
+    const payload = {
+      model: "gemini-1.5-flash",
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         systemInstruction: "أنت سيد النظام رمضان مان. وظيفتك إنتاج رسائل تشخيصية سيادية حادة وذكية."
       }
-    });
-    return response.text || "أنا أراقب تحركاتك.. استمر في المجاهدة.";
+    };
+    const response = await callAIProxy(payload);
+    return response.candidates?.[0]?.content?.parts?.[0]?.text || "أنا أراقب تحركاتك.. استمر في المجاهدة.";
   } catch (error) {
     console.error("AI Command Error:", error);
     return "أنا أراقب تحركاتك.. استمر في المجاهدة.";

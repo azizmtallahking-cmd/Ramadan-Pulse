@@ -11,7 +11,6 @@ import {
   collection, query, where, onSnapshot, addDoc, serverTimestamp, 
   updateDoc, doc, deleteDoc, orderBy, limit, getDocs, getDoc 
 } from 'firebase/firestore';
-import { GoogleGenAI } from "@google/genai";
 import { triggerAdministrativeReview } from '../services/adminService';
 import { activateSynergy, scanForSynergy } from '../services/synergyService';
 import { logActivity } from '../services/archiveService';
@@ -253,7 +252,19 @@ export default function FileDetailPage({ file, onBack, profile, files }: FileDet
   const analyzeVaultItem = async (item: Partial<VaultItem>) => {
     if (!profile) return null;
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const callAIProxy = async (payload: any) => {
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'AI Proxy request failed');
+        }
+        return response.json();
+      };
+
       let prompt = '';
       
       if (item.type === 'image') {
@@ -272,12 +283,12 @@ export default function FileDetailPage({ file, onBack, profile, files }: FileDet
 المهمة: قدم ملخصاً تحليلياً يوضح القيمة المضافة لهذا النص في النظام.`;
       }
 
-      const response = await ai.models.generateContent({
+      const response = await callAIProxy({
         model: "gemini-3-flash-preview",
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
       });
 
-      return response.text;
+      return response.candidates?.[0]?.content?.parts?.[0]?.text || '';
     } catch (e) {
       console.error("AI Analysis Error:", e);
       return "تعذر التحليل التلقائي حالياً. سيقوم السيد بمراجعته يدوياً.";

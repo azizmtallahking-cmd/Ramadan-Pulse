@@ -3,6 +3,12 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User 
 import { getFirestore, doc, getDoc, setDoc, collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, limit, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
+/**
+ * IMPORTANT FOR VERCEL DEPLOYMENT:
+ * You must add 'ramadan-pulse.vercel.app' to the "Authorized domains" 
+ * in your Firebase Console under Authentication > Settings > Authorized domains.
+ */
+
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);

@@ -10,6 +10,7 @@ import Files from './pages/Files';
 import Goals from './pages/Goals';
 import Archive from './pages/Archive';
 import PulseCorner from './pages/PulseCorner';
+import Onboarding from './pages/Onboarding';
 import ErrorBoundary from './components/ErrorBoundary';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, Moon, Loader2 } from 'lucide-react';
@@ -64,6 +65,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<'home' | 'chat' | 'files' | 'goals' | 'archive' | 'pulse'>('home');
 
+  // Effect to handle initial page redirection based on resident status
+  useEffect(() => {
+    if (profile?.isResident && profile?.onboardingCompleted && currentPage === 'home') {
+      setCurrentPage('pulse');
+    }
+  }, [profile?.isResident, profile?.onboardingCompleted]);
+
   useEffect(() => {
     if (profile) {
       checkAndTriggerSeasonalReview(profile);
@@ -106,6 +114,7 @@ export default function App() {
               email: user.email || '',
               displayName: user.displayName || 'مستخدم جديد',
               photoURL: user.photoURL || '',
+              onboardingCompleted: false,
               points: 0,
               level: 1,
               pulse: 50,
@@ -154,6 +163,11 @@ export default function App() {
 
   if (!user) {
     return <LoginView onLogin={signInWithGoogle} />;
+  }
+
+  // Onboarding Flow for new users
+  if (profile && profile.onboardingCompleted === false) {
+    return <Onboarding profile={profile} />;
   }
 
   // Calculate Visual Restriction based on Pulse

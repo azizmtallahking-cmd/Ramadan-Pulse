@@ -28,6 +28,13 @@ export interface UserProfile {
   email: string;
   displayName: string;
   photoURL: string;
+  firstName?: string;
+  lastName?: string;
+  age?: number;
+  appBenefit?: string;
+  visitReason?: string;
+  country?: string;
+  onboardingCompleted?: boolean;
   points: number;
   level: number;
   pulse: number; // النبض العام (0-100)

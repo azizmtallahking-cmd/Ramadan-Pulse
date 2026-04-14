@@ -7,7 +7,6 @@ import {
 import { UserProfile, ChatMessage } from '../types';
 import { db, auth } from '../firebase';
 import { collection, addDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, updateDoc, doc } from 'firebase/firestore';
-import { GoogleGenAI } from "@google/genai";
 
 interface PulseCornerProps {
   profile: UserProfile | null;
@@ -52,26 +51,38 @@ export default function PulseCorner({ profile, onNavigate }: PulseCornerProps) {
     }
   }, [messages]);
 
+  const callAIProxy = async (payload: any) => {
+    const response = await fetch('/api/ai/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'AI Proxy request failed');
+    }
+    return response.json();
+  };
+
   const startPulseInteraction = async () => {
     if (!profile) return;
     setIsTyping(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
       const prompt = `أنت الآن في "ركن النبض"، المكان المخصص للتفاعل اليومي السريع مع السيد.
 المستخدم: ${profile.displayName}
 الحالة: ${profile.isResident ? 'من أهل الديار' : 'زائر جديد'}
 المهمة: ابدأ بالترحيب به واطرح عليه سؤالاً عميقاً حول روتينه اليومي أو أسباب اختياره لهذا المسار الوجودي. اجعل السؤال يثير التفكير ويساعده على تصميم "نبضه" اليومي.
 اللغة: عربية فصحى بلمسة فلسفية وهندسية.`;
 
-      const response = await ai.models.generateContent({
+      const response = await callAIProxy({
         model: "gemini-3-flash-preview",
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
       });
 
       await addDoc(collection(db, `chats/${profile.uid}/messages`), {
         uid: profile.uid,
         role: 'model',
-        content: response.text,
+        content: response.candidates?.[0]?.content?.parts?.[0]?.text || '',
         location: 'pulse',
         timestamp: serverTimestamp()
       });
@@ -97,17 +108,16 @@ export default function PulseCorner({ profile, onNavigate }: PulseCornerProps) {
       });
 
       setIsTyping(true);
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-      const response = await ai.models.generateContent({
+      const response = await callAIProxy({
         model: "gemini-3-flash-preview",
-        contents: `المستخدم في ركن النبض. رد عليه بأسلوب "عون البناء" المحفز والعميق.
-رسالة المستخدم: ${text}`,
+        contents: [{ role: 'user', parts: [{ text: `المستخدم في ركن النبض. رد عليه بأسلوب "عون البناء" المحفز والعميق.
+رسالة المستخدم: ${text}` }] }]
       });
 
       await addDoc(collection(db, `chats/${profile.uid}/messages`), {
         uid: profile.uid,
         role: 'model',
-        content: response.text,
+        content: response.candidates?.[0]?.content?.parts?.[0]?.text || '',
         location: 'pulse',
         timestamp: serverTimestamp()
       });
